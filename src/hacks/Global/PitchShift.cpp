@@ -11,59 +11,57 @@
 #include <modules/hack/hack.hpp>
 
 namespace eclipse::hacks::Global {
-	namespace {
-		constexpr int kMaxPitchStages = 10;
+	constexpr int kMaxPitchStages = 10;
 
-		std::vector<FMOD::DSP*>& pitchShiftChain() {
-			static std::vector<FMOD::DSP*> chain;
-			return chain;
-		}
+	static std::vector<FMOD::DSP *> &pitchShiftChain() {
+		static std::vector<FMOD::DSP *> chain;
+		return chain;
+	}
 
-		bool ensureStages(int count) {
-			auto& chain = pitchShiftChain();
-			if (static_cast<int>(chain.size()) >= count) {
-				return true;
-			}
-
-			auto* engine = FMODAudioEngine::sharedEngine();
-			if (!engine || !engine->m_system) {
-				return false;
-			}
-
-			FMOD::ChannelGroup* masterGroup;
-			if (engine->m_system->getMasterChannelGroup(&masterGroup) != FMOD_OK) {
-				return false;
-			}
-
-			while (static_cast<int>(chain.size()) < count) {
-				FMOD::DSP* dsp = nullptr;
-				if (engine->m_system->createDSPByType(FMOD_DSP_TYPE_PITCHSHIFT, &dsp) != FMOD_OK) {
-					return false;
-				}
-
-				dsp->setParameterFloat(FMOD_DSP_PITCHSHIFT_FFTSIZE, 1024.f);
-				dsp->setBypass(true);
-				masterGroup->addDSP(0, dsp);
-				chain.push_back(dsp);
-			}
-
+	static bool ensureStages(int count) {
+		auto &chain = pitchShiftChain();
+		if (static_cast<int>(chain.size()) >= count) {
 			return true;
 		}
 
-		float currentAudioSpeed() {
-			if (config::get<"global.audiospeed.toggle", bool>()) {
-				return config::get<"global.audiospeed", double>(1.0);
-			}
-
-			if (config::get<"global.audiospeed.sync", bool>() && config::get<"global.speedhack.toggle", bool>()) {
-				return config::get<"global.speedhack", double>(1.0);
-			}
-
-			return 1.f;
+		auto *engine = FMODAudioEngine::sharedEngine();
+		if (!engine || !engine->m_system) {
+			return false;
 		}
-	} // namespace
 
-	void setPitch(float pitch) {
+		FMOD::ChannelGroup *masterGroup;
+		if (engine->m_system->getMasterChannelGroup(&masterGroup) != FMOD_OK) {
+			return false;
+		}
+
+		while (static_cast<int>(chain.size()) < count) {
+			FMOD::DSP *dsp = nullptr;
+			if (engine->m_system->createDSPByType(FMOD_DSP_TYPE_PITCHSHIFT, &dsp) != FMOD_OK) {
+				return false;
+			}
+
+			dsp->setParameterFloat(FMOD_DSP_PITCHSHIFT_FFTSIZE, 1024.f);
+			dsp->setBypass(true);
+			masterGroup->addDSP(0, dsp);
+			chain.push_back(dsp);
+		}
+
+		return true;
+	}
+
+	static float currentAudioSpeed() {
+		if (config::get<"global.audiospeed.toggle", bool>()) {
+			return config::get<"global.audiospeed", double>(1.0);
+		}
+
+		if (config::get<"global.audiospeed.sync", bool>() && config::get<"global.speedhack.toggle", bool>()) {
+			return config::get<"global.speedhack", double>(1.0);
+		}
+
+		return 1.f;
+	}
+
+	static void setPitch(float pitch) {
 		static const float kMinPitch = std::pow(0.5f, static_cast<float>(kMaxPitchStages));
 		static const float kMaxPitch = std::pow(2.0f, static_cast<float>(kMaxPitchStages));
 		pitch = std::clamp(pitch, kMinPitch, kMaxPitch);
@@ -77,7 +75,7 @@ namespace eclipse::hacks::Global {
 			return;
 		}
 
-		auto& chain = pitchShiftChain();
+		auto &chain = pitchShiftChain();
 
 		const float perStage = stages > 0 ? std::clamp(std::pow(pitch, 1.f / stages), 0.5f, 2.0f) : 1.f;
 
@@ -127,7 +125,7 @@ namespace eclipse::hacks::Global {
 		}
 
 		[[nodiscard]]
-		const char* getId() const override {
+		const char *getId() const override {
 			return "Pitch Shift";
 		}
 
@@ -140,9 +138,7 @@ namespace eclipse::hacks::Global {
 	REGISTER_HACK(PitchShift)
 
 	class $modify(PitchShiftFMODHook, FMODAudioEngine) {
-		static bool shouldUpdate() {
-			return config::get<"global.autopitchshift.toggle", bool>();
-		}
+		static bool shouldUpdate() { return config::get<"global.autopitchshift.toggle", bool>(); }
 
 		void update(float dt) override {
 			FMODAudioEngine::update(dt);

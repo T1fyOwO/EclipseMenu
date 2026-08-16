@@ -3,11 +3,7 @@ add_library(third_party INTERFACE)
 
 # Include libraries
 add_library(imgui INTERFACE)
-CPMAddPackage(
-    NAME imgui
-    GIT_REPOSITORY "https://git.eclipse.menu/EclipseMenu/imgui"
-    GIT_TAG "8cf1bfc"
-)
+CPMAddPackage("gh:EclipseMenu/imgui#8cf1bfc")
 target_include_directories(imgui INTERFACE ${imgui_SOURCE_DIR})
 target_sources(imgui INTERFACE
     ${imgui_SOURCE_DIR}/imgui.cpp
@@ -21,28 +17,19 @@ set(HAS_IMGUI ON)
 set(IMGUI_HOOK_EARLY OFF)
 
 if (NOT ANDROID AND NOT IOS)
-    CPMAddPackage(
-        NAME discord-presence
-        GIT_REPOSITORY "https://git.eclipse.menu/EclipseMenu/discord-presence"
-        GIT_TAG "3b50b08"
-    )
+    CPMAddPackage("gh:EclipseMenu/discord-presence#3b50b08")
 endif()
 
-CPMAddPackage("gh:prevter/gd-imgui-cocos#6383c75")
+CPMAddPackage("gh:prevter/gd-imgui-cocos#e66d02b")
 CPMAddPackage("gh:prevter/msgpack-for-matjson#12edd5a")
 CPMAddPackage("gh:maxnut/GDR-converter#71104a9")
-# CPMAddPackage("gh:EclipseMenu/rift@2.0.2")
-CPMAddPackage(
-    NAME rift
-    GIT_REPOSITORY "https://git.eclipse.menu/EclipseMenu/rift"
-    VERSION "2.0.2"
-)
+CPMAddPackage("gh:EclipseMenu/rift@2.0.2")
 CPMAddPackage("gh:prevter/AdvancedLabel#17ed1c1")
 CPMAddPackage("gh:prevter/sinaps#7d2f7b1")
 CPMAddPackage("gh:prevter/rock#6a2d29e")
 
 if (WIN32)
-    CPMAddPackage("gh:zyantific/zydis#a95bb71")
+    CPMAddPackage("gh:zyantific/zydis#ae12a09")
 endif ()
 
 # Fix debug build
