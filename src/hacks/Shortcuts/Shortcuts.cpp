@@ -126,11 +126,14 @@ namespace eclipse::hacks::Shortcuts {
                     level->m_normalPercent = 0;
                     level->m_newNormalPercent2 = 0;
                     level->m_orbCompletion = 0;
-                    // TODO: v5 geode
-                    // level->m_54 = 0;
+                    
                     level->m_platformerSeed = 0;
                     level->m_bestPoints = 0;
                     level->m_bestTime = 0;
+
+                    level->m_clicks = 0;
+                    level->m_attemptTime = 0;
+                    level->m_personalBests = "";
 
                     /* // unsure if this is needed
                     level->m_isChkValid = 0;
