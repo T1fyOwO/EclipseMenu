@@ -11,10 +11,10 @@ namespace eclipse::gui::imgui {
         class FontMetadata {
             ImFont* m_font{};
             std::string m_name;
-            std::filesystem::path m_path;
+            asp::fs::Path m_path;
 
         public:
-            FontMetadata(std::string name, std::filesystem::path path)
+            FontMetadata(std::string name, asp::fs::Path path)
                 : m_name(std::move(name)), m_path(std::move(path)) {}
 
             [[nodiscard]] std::string_view getName() const;

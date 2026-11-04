@@ -1,6 +1,7 @@
 #include "config.hpp"
 
 #include <fstream>
+#include <asp/fs/fs.hpp>
 #include <Geode/loader/Log.hpp>
 #include <Geode/loader/Mod.hpp>
 
@@ -47,7 +48,7 @@ namespace eclipse::config {
     /// @brief Load config file from path
     /// @param path Path to the config file
     /// @return True if the file was loaded successfully
-    bool loadFile(std::filesystem::path const& path) {
+    bool loadFile(asp::fs::PathView path) {
         auto& storage = getStorage();
         auto res = geode::utils::file::readJson(path);
         if (!res) {
@@ -108,7 +109,7 @@ namespace eclipse::config {
 
     /// @brief Save config file to path
     /// @param path Path to save the config file
-    void saveFile(std::filesystem::path const& path) {
+    void saveFile(asp::fs::PathView path) {
         auto data = getStorage().dump();
         auto res = geode::utils::file::writeStringSafe(path, data);
         if (res.isErr()) {
@@ -123,11 +124,9 @@ namespace eclipse::config {
 
     void saveProfile(std::string_view profile) {
         auto profilesDir = geode::Mod::get()->getSaveDir() / "profiles";
-
-        std::error_code ec;
-        std::filesystem::create_directories(profilesDir, ec);
-        if (ec) {
-            geode::log::error("Failed to create profiles directory: {}", ec.message());
+        auto res = asp::fs::createDirAll(profilesDir);
+        if (!res) {
+            geode::log::error("Failed to create profiles directory: {}", res.unwrapErr());
             return;
         }
 
@@ -148,11 +147,10 @@ namespace eclipse::config {
         auto profilesDir = geode::Mod::get()->getSaveDir() / "profiles";
         auto path = profilesDir / fmt::format("{}.json", profile);
 
-        std::error_code ec;
-        if (std::filesystem::exists(path, ec)) {
-            std::filesystem::remove(path, ec);
-            if (ec) {
-                geode::log::error("Failed to delete profile {}: {}", profile, ec.message());
+        if (path.exists()) {
+            auto res = asp::fs::remove(path);
+            if (!res) {
+                geode::log::error("Failed to delete profile {}: {}", profile, res.unwrapErr());
             }
         }
     }
@@ -160,24 +158,27 @@ namespace eclipse::config {
     std::vector<std::string> getProfiles() {
         std::vector<std::string> profiles;
         auto profilesDir = geode::Mod::get()->getSaveDir() / "profiles";
-        std::error_code ec;
-        if (!std::filesystem::exists(profilesDir, ec)) {
+
+        if (!profilesDir.exists()) {
             return profiles;
         }
 
-        if (ec) {
-            geode::log::error("Failed to access profiles directory: {}", ec.message());
+        auto iter = asp::fs::iterDir(profilesDir);
+        if (!iter) {
+            geode::log::error("Failed to list profiles: {}", iter.unwrapErr());
             return profiles;
         }
 
-        for (auto& entry : std::filesystem::directory_iterator(profilesDir, ec)) {
-            if (entry.is_regular_file() && entry.path().extension() == ".json") {
-                profiles.push_back(geode::utils::string::pathToString(entry.path().stem()));
+        while (auto entry = iter.unwrap().next()) {
+            auto& itemRes = entry.value();
+            if (!itemRes) continue;
+
+            auto& item = itemRes.unwrap();
+
+            if (item.isFile() && item.path.extension() == "json") {
+                auto stem = item.path.stem();
+                if (stem) profiles.push_back(std::string(*stem));
             }
-        }
-
-        if (ec) {
-            geode::log::error("Failed to list profiles: {}", ec.message());
         }
 
         return profiles;

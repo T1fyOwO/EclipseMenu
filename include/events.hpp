@@ -59,7 +59,7 @@ namespace eclipse::__internal__ {
 
         // modules
         void(*RegisterCheat)(std::string, geode::Function<bool()>) = nullptr;
-        geode::Result<>(*LoadReplay)(std::filesystem::path const&) = nullptr;
+        geode::Result<>(*LoadReplay)(asp::fs::PathView) = nullptr;
         geode::Result<>(*LoadReplayFromData)(std::span<uint8_t>) = nullptr;
         bool(*CheckCheatsEnabled)() = nullptr;
         bool(*CheckCheatedInAttempt)() = nullptr;

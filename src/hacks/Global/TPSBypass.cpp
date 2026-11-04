@@ -77,13 +77,14 @@ namespace eclipse::hacks::Global {
             {
                 using namespace assembler::x86_64;
                 // 2.2074: 0x232294
-                // 2.2081: 0x237a55
+                // 2.2081: 0x237a5b
+                // 2.2091: 0x3408df
                 addr = sinaps::find<"FF 90 ? ? ? ? ^ F3 0F 10 ? ? ? ? ? F3 44 0F 10 ? ? ? ? 00 F3 41 0F 5D">(base, baseSize);
                 if (addr != sinaps::not_found) {
                     bytes = Builder(addr)
                         .movabs(Register64::rax, std::bit_cast<uint64_t>(&g_expectedTicks))
-                        .mov(Register32::r11d, Register64::rax)
-                        .jmp(addr + 0x43, true)
+                        .mov(Register32::edi, Register64::rax) // edi is operand for cvttss2si
+                        .jmp(addr + 0x42, true) // skip to right after the cvttss2si
                         .nop(4)
                         .build();
                 }

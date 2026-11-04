@@ -1,6 +1,9 @@
 #include "imgui.hpp"
+
+#include <fstream>
 #include <imgui-cocos.hpp>
 #include <utils.hpp>
+#include <asp/fs/fs.hpp>
 #include <misc/cpp/imgui_stdlib.h>
 #include <modules/config/config.hpp>
 #include <modules/gui/gui.hpp>
@@ -124,7 +127,7 @@ namespace eclipse::gui::imgui {
 
     void FontManager::FontMetadata::load() {
         auto fontSize = ThemeManager::get()->getFontSize() * DEFAULT_SCALE;
-        std::ifstream file(m_path, std::ios::binary);
+        std::ifstream file(m_path.c_str(), std::ios::binary);
         if (!file.is_open()) {
             geode::log::error("Failed to open font file: {}", m_path);
             return;
@@ -160,21 +163,25 @@ namespace eclipse::gui::imgui {
 
     std::vector<FontManager::FontMetadata> FontManager::fetchAvailableFonts() {
         std::vector<FontMetadata> result;
-        auto globFonts = [&](std::filesystem::path const& path) {
-            std::error_code ec;
-            std::filesystem::create_directories(path, ec);
-            if (ec) {
-                geode::log::warn("Failed to create fonts directory {}: {}", path, ec.message());
+        auto globFonts = [&](asp::fs::PathView path) {
+            auto res = asp::fs::createDirAll(path);
+            if (!res) {
+                geode::log::warn("Failed to create fonts directory {}: {}", path, res.unwrapErr());
                 return;
             }
-            for (auto& entry : std::filesystem::directory_iterator(path, ec)) {
-                if (entry.path().extension() != ".ttf") continue;
-                auto filename = geode::utils::string::pathToString(entry.path().stem());
-                FontMetadata font{filename, entry.path()};
-                result.push_back(font);
+
+            auto iterRes = asp::fs::iterDir(path);
+            if (!iterRes) {
+                geode::log::warn("Failed to list fonts in {}: {}", path, iterRes.unwrapErr());
+                return;
             }
-            if (ec) {
-                geode::log::warn("Failed to list fonts in {}: {}", path, ec.message());
+
+            for (auto entry : iterRes.unwrap()) {
+                if (entry.isErr()) continue;
+                if (entry.unwrap().path.extension() != "ttf") continue;
+                auto filename = entry.unwrap().path.stem().value_or({});
+                FontMetadata font{std::string(filename), entry.unwrap().path};
+                result.push_back(std::move(font));
             }
         };
 

@@ -12,6 +12,7 @@
 #include <modules/gui/blur/blur.hpp>
 
 #include <AdvancedLabel.hpp>
+#include <asp/fs/fs.hpp>
 #include <modules/gui/cocos/cocos.hpp>
 #include <modules/gui/theming/manager.hpp>
 
@@ -139,13 +140,12 @@ $on_mod(Loaded) {
 
     // Add bitmap fonts to texture search path
     auto bmfontPath = geode::Mod::get()->getConfigDir() / "bmfonts";
-    std::error_code ec;
-    std::filesystem::create_directories(bmfontPath / GEODE_MOD_ID, ec);
-    if (ec) {
-        geode::log::warn("Failed to create bitmap fonts directory {}: {}", bmfontPath, ec.message());
+    auto res = asp::fs::createDirAll(bmfontPath / GEODE_MOD_ID);
+    if (!res) {
+        geode::log::warn("Failed to create bitmap fonts directory {}: {}", bmfontPath, res.unwrapErr());
     }
 
-    utils::get<cocos2d::CCFileUtils>()->addSearchPath(geode::utils::string::pathToString(bmfontPath).c_str());
+    utils::get<cocos2d::CCFileUtils>()->addSearchPath(bmfontPath.c_str());
     geode::log::info("Added bitmap fonts to search path: {}", bmfontPath);
 
     // Add "Interface" tab to edit theme settings

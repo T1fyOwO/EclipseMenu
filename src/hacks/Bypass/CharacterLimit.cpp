@@ -20,9 +20,9 @@ namespace eclipse::hacks::Bypass {
     class $modify(CharacterLimitCCTINHook, CCTextInputNode) {
         ADD_HOOKS_DELEGATE("bypass.charlimit")
 
-        void updateLabel(gd::string str) {
+        void updateLabel(std::string str) {
             this->setMaxLabelLength(99999);
-            CCTextInputNode::updateLabel(str);
+            CCTextInputNode::updateLabel(std::move(str));
         }
     };
 }

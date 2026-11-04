@@ -55,7 +55,7 @@ namespace eclipse::utils {
 
         #ifndef GEODE_IS_ANDROID
         //GameState
-        gd::unordered_map<int, GameObjectPhysics> m_gameObjectPhysics;
+        std::unordered_map<int, GameObjectPhysics> m_gameObjectPhysics;
         #endif
     };
 

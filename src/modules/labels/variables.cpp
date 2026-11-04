@@ -16,7 +16,7 @@
 
 #include <rift/config.hpp>
 
-#include <dankmeme.globed2/include/globed/soft-link/Wrappers.hpp>
+// #include <dankmeme.globed2/include/globed/soft-link/Wrappers.hpp>
 
 namespace eclipse::labels {
     static std::vector<EffectGameObject*> s_coins;
@@ -340,7 +340,7 @@ namespace eclipse::labels {
         "likedLevels", "ratedLevels", "userCoins", "diamonds", "orbs", "dailies",
     };
 
-    inline int getStatFromDictionary(cocos2d::CCDictionary* dict, gd::string const& key) {
+    inline int getStatFromDictionary(cocos2d::CCDictionary* dict, std::string const& key) {
         auto& str = dict->valueForKey(key)->m_sString;
         if (str.empty()) return 0;
         if (auto res = geode::utils::numFromString<int>(str)) {
@@ -383,7 +383,7 @@ namespace eclipse::labels {
         }
     }
 
-    inline int getStatIndex(int i, gd::unordered_map<int, int> const& seeds, gd::unordered_map<int, int> const& rands) {
+    inline int getStatIndex(int i, std::unordered_map<int, int> const& seeds, std::unordered_map<int, int> const& rands) {
         auto rand = rands.find(i);
         auto seed = seeds.find(i);
         if (rand != rands.end() && seed != seeds.end()) {
@@ -707,10 +707,10 @@ namespace eclipse::labels {
 
         if (enabled) {
             // net
-            globed[std::string("isConnected")] = globed::api::net::isConnected();
-            globed[std::string("ping")] = (int64_t)globed::api::net::getGamePingMs();
-            globed[std::string("centralPing")] = (int64_t)globed::api::net::getCentralPingMs();
-            globed[std::string("tps")] = (int64_t)globed::api::net::getGameTickrate();
+            // globed[std::string("isConnected")] = globed::api::net::isConnected();
+            // globed[std::string("ping")] = (int64_t)globed::api::net::getGamePingMs();
+            // globed[std::string("centralPing")] = (int64_t)globed::api::net::getCentralPingMs();
+            // globed[std::string("tps")] = (int64_t)globed::api::net::getGameTickrate();
 
             // suggestion for daniel meme to add:
             // serverName
@@ -719,7 +719,7 @@ namespace eclipse::labels {
             // other room things
 
             // globed[std::string("playersOnline")] = (int64_t)globed::api::player::playersOnline();
-            globed[std::string("playersOnLevel")] = (int64_t)globed::api::game::getPlayerCount();
+            // globed[std::string("playersOnLevel")] = (int64_t)globed::api::game::getPlayerCount();
         }
     }
 
@@ -785,9 +785,9 @@ namespace eclipse::labels {
                 s_coins.push_back(static_cast<EffectGameObject*>(obj));
         }
 
-        bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
+        bool init(GJGameLevel* level, bool dontCreateObjects) {
             s_coins.clear();
-            if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+            if (!PlayLayer::init(level, dontCreateObjects)) return false;
 
             auto& manager = VariableManager::get();
             manager.setVariable("runFrom", 0.f);

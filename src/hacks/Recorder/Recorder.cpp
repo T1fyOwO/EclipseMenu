@@ -1,3 +1,4 @@
+#include <asp/fs/fs.hpp>
 #include <modules/config/config.hpp>
 #include <modules/gui/gui.hpp>
 #include <modules/gui/components/button.hpp>
@@ -13,13 +14,6 @@
 
 #include <modules/i18n/translations.hpp>
 #include <modules/recorder/DSPRecorder.hpp>
-
-// android uses custom gd::string class
-#ifdef GEODE_IS_ANDROID
-#define STR(x) std::string(x)
-#else
-#define STR(x) x
-#endif
 
 namespace eclipse::hacks::Recorder {
     static recorder::Recorder s_recorder;
@@ -127,15 +121,14 @@ namespace eclipse::hacks::Recorder {
         std::erase(trimmedLevelName, '\\');
         trimString(trimmedLevelName);
 
-        std::filesystem::path renderDirectory = geode::Mod::get()->getSaveDir() / "renders" / STR(trimmedLevelName);
+        asp::fs::Path renderDirectory = geode::Mod::get()->getSaveDir() / "renders" / trimmedLevelName;
 
-        std::error_code ec;
-        if (!std::filesystem::exists(renderDirectory, ec)) {
-            std::filesystem::create_directories(renderDirectory, ec);
-            if (ec) {
+        if (!renderDirectory.exists()) {
+            auto res = asp::fs::createDirAll(renderDirectory);
+            if (!res) {
                 return Popup::create(
                     i18n::get_("common.error"),
-                    ec.message()
+                    res.unwrapErr()
                 );
             }
         }

@@ -262,7 +262,7 @@ namespace eclipse::hacks::Level {
                 auto ligherPlayerColorFill = playerColorFill.lighten(0.5f);
                 auto ligherPlayerColorInnerFill = playerColorInnerFill.lighten(0.5f);
 
-                // P1 trail
+                // P1 outer trail
                 for (auto const& entry : s_playerTrail1) drawRect(
                     drawNode, cocos2d::CCRect{entry.hitboxPos, {entry.hitboxSize, entry.hitboxSize}},
                     entry.isSubtick ? ligherPlayerColorFill : playerColorFill,
@@ -270,15 +270,15 @@ namespace eclipse::hacks::Level {
                     playerColor
                 );
 
-                // P2 trail
+                // P1 inner trail
                 for (auto const& entry : s_playerTrail1) drawRect(
                     drawNode, cocos2d::CCRect{entry.innerHitboxPos, {entry.innerHitboxSize, entry.innerHitboxSize}},
-                    entry.isSubtick ? ligherPlayerColorFill : playerColorInnerFill,
+                    entry.isSubtick ? ligherPlayerColorInnerFill : playerColorInnerFill,
                     borderSize,
                     playerColorInner
                 );
 
-                // P1 inner trail
+                // P2 outer trail
                 for (auto const& entry : s_playerTrail2) drawRect(
                     drawNode, cocos2d::CCRect{entry.hitboxPos, {entry.hitboxSize, entry.hitboxSize}},
                     entry.isSubtick ? ligherPlayerColorFill : playerColorFill,

@@ -4,6 +4,7 @@
 #include <modules/config/config.hpp>
 #include <modules/labels/setting.hpp>
 #include <utils.hpp>
+#include <asp/fs/fs.hpp>
 
 namespace eclipse::i18n {
     using Map = geode::utils::StringMap<std::string>;
@@ -36,14 +37,13 @@ namespace eclipse::i18n {
         return keyStr;
     }
 
-    static std::string stringExtension(std::filesystem::path const& filename) {
+    static std::string stringExtension(asp::fs::PathView filename) {
         // turns "en_US.lang.json" into "en_US"
-        auto filenameStr = geode::utils::string::pathToString(filename);
-        auto pos = filenameStr.find_first_of('.');
-        return filenameStr.substr(0, pos);
+        auto pos = filename.view().find_first_of('.');
+        return std::string(filename.view().substr(0, pos));
     }
 
-    static void updateLanguageCode(Map& json, std::filesystem::path const& filename) {
+    static void updateLanguageCode(Map& json, asp::fs::PathView filename) {
         json.insert_or_assign("language-code", stringExtension(filename));
     }
 
@@ -86,7 +86,7 @@ namespace eclipse::i18n {
         auto res2 = res.unwrap().as<Map>();
         if (res2.isErr()) return;
         g_fallback = std::move(res2.unwrap());
-        updateLanguageCode(g_fallback, it->path.filename());
+        updateLanguageCode(g_fallback, it->path.filename().value_or({}));
     }
 
     bool setLanguage(std::string_view code) {
@@ -103,7 +103,7 @@ namespace eclipse::i18n {
         if (map.isErr()) return false;
 
         g_translations = std::move(map.unwrap());
-        updateLanguageCode(g_translations, it->path.filename());
+        updateLanguageCode(g_translations, it->path.filename().value_or({}));
         config::setTemp<uint64_t>("language.index", std::distance(langs.begin(), it));
 
         // check if current fallback is the same as the new language
@@ -139,7 +139,7 @@ namespace eclipse::i18n {
         return g_translations["language-code"];
     }
 
-    std::optional<LanguageMetadata> getLanguageName(std::filesystem::path const& path) {
+    std::optional<LanguageMetadata> getLanguageName(asp::fs::PathView path) {
         auto res = geode::utils::file::readJson(path);
         if (res.isErr()) return std::nullopt;
         auto json = res.unwrap();
@@ -151,7 +151,7 @@ namespace eclipse::i18n {
 
         return LanguageMetadata{
             json["language-name"].asString().unwrapOrDefault(),
-            std::string(stringExtension(path.filename())),
+            stringExtension(path.filename().value_or({})),
             std::move(fallback),
             std::move(charset),
             path
@@ -163,19 +163,29 @@ namespace eclipse::i18n {
         static auto fallbackPath = geode::Mod::get()->getResourcesDir();
 
         std::vector<LanguageMetadata> result;
-        auto globLangs = [&](std::filesystem::path const& path) {
-            std::error_code ec;
-            std::filesystem::create_directories(path, ec);
-            if (ec) {
-                geode::log::warn("Failed to create languages directory {}: {}", path, ec.message());
+        auto globLangs = [&](asp::fs::PathView path) {
+
+            auto res = asp::fs::createDirAll(path);
+            if (!res) {
+                geode::log::warn("Failed to create languages directory {}: {}", path, res.unwrapErr());
                 return;
             }
-            for (auto& entry : std::filesystem::directory_iterator(path, ec)) {
-                auto filename = geode::utils::string::pathToString(entry.path().filename());
-                if (filename.size() < 10 || filename.substr(filename.size() - 10) != ".lang.json") continue;
 
-                auto code = filename.substr(0, filename.size() - 10);
-                auto name = getLanguageName(entry.path());
+            auto iter = asp::fs::iterDir(path);
+            if (!iter) {
+                geode::log::warn("Failed to list languages in {}: {}", path, iter.unwrapErr());
+                return;
+            }
+
+            for (auto item : iter.unwrap()) {
+                if (!item) continue;
+                auto& entry = item.unwrap();
+
+                auto filename = entry.path.filename().value_or({});
+                if (filename.size() < 10 || filename.view().substr(filename.size() - 10) != ".lang.json") continue;
+
+                auto code = filename.view().substr(0, filename.size() - 10);
+                auto name = getLanguageName(entry.path);
                 if (!name) continue;
 
                 // filter out duplicates
@@ -184,9 +194,6 @@ namespace eclipse::i18n {
                 }) != result.end()) continue;
 
                 result.push_back(std::move(*name));
-            }
-            if (ec) {
-                geode::log::warn("Failed to list languages in {}: {}", path, ec.message());
             }
         };
 
@@ -200,11 +207,7 @@ namespace eclipse::i18n {
         if (font == "default") return true;
 
         static auto fontsPath = geode::Mod::get()->getConfigDir() / "bmfonts" / GEODE_MOD_ID;
-        std::error_code ec;
-        if (!std::filesystem::exists(fontsPath, ec))
-            return false;
-
-        if (!std::filesystem::exists(fontsPath / fmt::format("font_{}.fnt", font), ec))
+        if (!fontsPath.join(fmt::format("font_{}.fnt", font)).exists())
             return false;
 
         return true;
@@ -227,10 +230,9 @@ namespace eclipse::i18n {
                 co_return;
             }
 
-            std::error_code ec;
-            std::filesystem::create_directories(langsPath, ec);
-            if (ec) {
-                geode::log::warn("Failed to create languages directory: {}", ec.message());
+            auto res2 = asp::fs::createDirAll(langsPath);
+            if (!res2) {
+                geode::log::warn("Failed to create languages directory: {}", res2.unwrapErr());
                 co_return;
             }
 
@@ -270,10 +272,10 @@ namespace eclipse::i18n {
             // remove local languages (since they are outdated)
             geode::log::info("Removing outdated languages...");
             static auto langsPath = geode::Mod::get()->getSaveDir() / "languages";
-            std::error_code ec;
-            std::filesystem::remove_all(langsPath, ec);
-            if (ec) {
-                geode::log::warn("Failed to remove languages directory: {}", ec.message().c_str());
+
+            auto res = asp::fs::removeDirAll(langsPath);
+            if (!res) {
+                geode::log::warn("Failed to remove languages directory: {}", res.unwrapErr());
             }
             setLastCheckTimestamp();
             return;

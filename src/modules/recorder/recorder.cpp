@@ -10,6 +10,7 @@
 #include <modules/recorder/DSPRecorder.hpp>
 #include <modules/utils/SingletonCache.hpp>
 #include <utils.hpp>
+#include <asp/fs/fs.hpp>
 
 namespace eclipse::recorder {
     namespace ffmpeg = ffmpeg::events;
@@ -131,18 +132,16 @@ namespace eclipse::recorder {
         DSPRecorder::get()->stop();
         auto data = DSPRecorder::get()->getData();
 
-        std::filesystem::path tempPath = m_renderSettings.m_outputFile.parent_path() / "music.mp4";
+        asp::fs::Path tempPath = m_renderSettings.m_outputFile.parent().value() / "music.mp4";
 
         res = ffmpeg::AudioMixer::mixVideoRaw(m_renderSettings.m_outputFile, data, tempPath);
         if (res.isErr()) return m_callback(res.unwrapErr());
 
-        std::error_code ec;
-        std::filesystem::remove(m_renderSettings.m_outputFile, ec);
-        if (ec) return m_callback("Failed to remove old video file.");
+        auto res1 = asp::fs::remove(m_renderSettings.m_outputFile);
+        if (res1.isErr()) return m_callback(fmt::format("Failed to remove old video file: {}", res1.unwrapErr()));
 
-        ec = {};
-        std::filesystem::rename(tempPath, m_renderSettings.m_outputFile, ec);
-        if (ec) return m_callback("Failed to rename temporary video file.");
+        auto res2 = asp::fs::rename(tempPath, m_renderSettings.m_outputFile);
+        if (res2.isErr()) return m_callback(fmt::format("Failed to rename temporary video file: {}", res2.unwrapErr()));
     }
 
     std::vector<std::string> Recorder::getAvailableCodecs() {

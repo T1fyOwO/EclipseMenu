@@ -1,3 +1,5 @@
+#include <asp/fs/fs.hpp>
+
 #include "button.hpp"
 #include "color.hpp"
 #include "combo.hpp"
@@ -229,7 +231,7 @@ namespace eclipse::gui {
 
     FilesystemComboComponent::FilesystemComboComponent(
         std::string id, std::string title,
-        std::filesystem::path directory
+        asp::fs::Path directory
     ): m_id(std::move(id)), m_title(std::move(title)), m_directory(std::move(directory)) {
         m_type = ComponentType::FilesystemCombo;
 
@@ -246,13 +248,13 @@ namespace eclipse::gui {
         return this;
     }
 
-    std::filesystem::path FilesystemComboComponent::getValue() const {
-        return get_value(m_id, std::filesystem::path(), m_noSave);
+    asp::fs::PathView FilesystemComboComponent::getValue() const {
+        return get_value<asp::fs::PathView>(m_id, "", m_noSave);
     }
 
-    std::vector<std::filesystem::path> const& FilesystemComboComponent::getItems() const { return m_items; }
+    std::vector<asp::fs::Path> const& FilesystemComboComponent::getItems() const { return m_items; }
 
-    void FilesystemComboComponent::setValue(std::filesystem::path path) const {
+    void FilesystemComboComponent::setValue(asp::fs::Path path) const {
         store_value(m_id, std::move(path), m_noSave);
     }
 
@@ -276,16 +278,21 @@ namespace eclipse::gui {
     void FilesystemComboComponent::globFiles() {
         m_items.clear();
 
-        std::error_code ec;
-        if (!std::filesystem::exists(m_directory, ec)) return;
+        if (!m_directory.exists()) return;
 
-        for (auto const& entry : std::filesystem::recursive_directory_iterator(m_directory, ec)) {
+        auto iterRes = asp::fs::iterDirRecursive(m_directory);
+        if (!iterRes) return;
+
+        auto& iter = iterRes.unwrap();
+        for (auto item : iter) {
+            if (item.isErr()) continue;
+
             #ifdef GEODE_IS_MACOS
             // Ignore stupid .DS_Store
-            if(entry.path().filename() == ".DS_Store") continue;
+            if(item.unwrap().path.filename() == ".DS_Store") continue;
             #endif
 
-            m_items.push_back(entry.path());
+            m_items.push_back(item.unwrap().path);
         }
     }
 

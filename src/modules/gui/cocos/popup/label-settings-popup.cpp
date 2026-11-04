@@ -49,7 +49,7 @@ namespace eclipse::gui::cocos {
             m_background->setScale(0.7f);
             m_background->setColor(tm->getButtonActivatedBackground().toCCColor3B());
 
-            static Label::EmojiMap const s_emojis = {
+            static AdvancedLabel::EmojiMap const s_emojis = {
                 {U"⚙️", "settings.png"_spr},
                 {U"⚡", "script_icon.png"_spr},
                 {U"🕔", "event_icon.png"_spr},
@@ -114,7 +114,7 @@ namespace eclipse::gui::cocos {
             m_page = labels::getFontIndex(font);
             m_font = std::move(font);
 
-            m_preview = Label::create("", m_font);
+            m_preview = AdvancedLabel::create("", m_font);
             this->addChildAtPosition(m_preview, geode::Anchor::Center);
 
             this->updatePreview();
@@ -178,7 +178,7 @@ namespace eclipse::gui::cocos {
 
     protected:
         Function<void(std::string const&)> m_callback;
-        Label* m_preview = nullptr;
+        AdvancedLabel* m_preview = nullptr;
         std::string m_font;
         size_t m_page = 0;
     };

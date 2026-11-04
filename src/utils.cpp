@@ -1,6 +1,7 @@
 #include "utils.hpp"
 
 #include <fmt/format.h>
+#include <fmt/chrono.h>
 #include <Geode/binding/GameManager.hpp>
 #include <Geode/binding/GJGameLevel.hpp>
 #include <Geode/binding/PlatformToolbox.hpp>
