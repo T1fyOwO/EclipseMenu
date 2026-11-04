@@ -8,7 +8,7 @@ namespace eclipse::gui {
     /// @brief Combo component for selecting entries from a path.
     class FilesystemComboComponent : public Component {
     public:
-        explicit FilesystemComboComponent(std::string id, std::string title, std::filesystem::path directory);
+        explicit FilesystemComboComponent(std::string id, std::string title, asp::fs::Path directory);
 
         void onUpdate() override;
 
@@ -16,13 +16,13 @@ namespace eclipse::gui {
         FilesystemComboComponent* callback(Function<void(int)>&& func);
 
         /// @brief Get the combo value.
-        [[nodiscard]] std::filesystem::path getValue() const;
+        [[nodiscard]] asp::fs::PathView getValue() const;
 
         /// @brief Get the combo items.
-        [[nodiscard]] std::vector<std::filesystem::path> const& getItems() const;
+        [[nodiscard]] std::vector<asp::fs::Path> const& getItems() const;
 
         /// @brief Set the combo value.
-        void setValue(std::filesystem::path path) const;
+        void setValue(asp::fs::Path path) const;
 
         /// @brief Set the combo value.
         void setValue(int index) const;
@@ -43,8 +43,8 @@ namespace eclipse::gui {
     private:
         std::string m_id;
         std::string m_title;
-        std::filesystem::path m_directory;
-        std::vector<std::filesystem::path> m_items;
+        asp::fs::Path m_directory;
+        std::vector<asp::fs::Path> m_items;
         Function<void(int)> m_callback;
 
         std::string m_searchBuffer;

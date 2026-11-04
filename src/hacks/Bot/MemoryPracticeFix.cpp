@@ -92,6 +92,15 @@ std::string getLastWindowsErrorAsString() {
     return message;
 }
 
+static bool safeWriteMemory(void* dst, const void* src, size_t size) {
+    __try {
+        memcpy(dst, src, size);
+        return true;
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+        return false;
+    }
+}
+
 struct MemoryRestore {
     DWORD old;
     uintptr_t addr;
@@ -249,11 +258,8 @@ public:
                     continue;
                 }
 
-                __try {
-                    memcpy((void*)entry.addr, entry.data.data(), entry.data.size());
-                } __except (EXCEPTION_EXECUTE_HANDLER) {
+                if (!safeWriteMemory((void*)entry.addr, entry.data.data(), entry.data.size()))
                     geode::log::error("Exception during memcpy when restoring addr {} (frame {})", (void*)entry.addr, entry.frame);
-                }
             }
 
             m_memoryLog.erase(m_memoryLog.begin() + eraseFromIndex, m_memoryLog.end());
@@ -329,11 +335,8 @@ LONG CALLBACK writeWatchHandler(PEXCEPTION_POINTERS info) {
         size_t maxReadable = s_memoryTracker.getPageSize() - (faultAddr & (s_memoryTracker.getPageSize() - 1));
         size_t toRead = std::min(size, maxReadable);
 
-        __try {
-            memcpy(before.data(), (void*)faultAddr, toRead);
-        } __except(EXCEPTION_EXECUTE_HANDLER) {
+        if (!safeWriteMemory(before.data(), (void*)faultAddr, toRead))
             return EXCEPTION_CONTINUE_SEARCH;
-        }
 
         s_memoryTracker.writeMemoryLog(s_currentFrame, faultAddr, std::move(before));
     }

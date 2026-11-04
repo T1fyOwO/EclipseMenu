@@ -1,4 +1,5 @@
 #include <modules.hpp>
+#include <asp/fs/fs.hpp>
 #include <modules/bot/bot.hpp>
 #include <modules/config/config.hpp>
 #include <modules/gui/gui.hpp>
@@ -54,13 +55,12 @@ namespace eclipse::hacks::Bot {
                 auto replaysDir = Mod::get()->getSaveDir() / "replays";
                 auto replayPath = replaysDir / (name + ".gdr2");
 
-                std::error_code ec;
-                if (!std::filesystem::exists(replaysDir, ec)) {
-                    std::filesystem::create_directory(replaysDir, ec);
-                    if (ec) {
+                if (!replaysDir.exists()) {
+                    auto res = asp::fs::createDirAll(replaysDir);
+                    if (res.isErr()) {
                         return Popup::create(
                             i18n::get_("common.error"),
-                            ec.message()
+                            res.unwrapErr()
                         );
                     }
                 }
@@ -85,32 +85,33 @@ namespace eclipse::hacks::Bot {
     }
 
     void saveReplay() {
-        std::filesystem::path replayDirectory = Mod::get()->getSaveDir() / "replays";
+        auto replayDirectory = Mod::get()->getSaveDir() / "replays";
 
-        std::error_code ec;
-        if (!std::filesystem::exists(replayDirectory, ec)) {
-            std::filesystem::create_directory(replayDirectory, ec);
-            if (ec) {
+        if (!replayDirectory.exists()) {
+            auto res = asp::fs::createDirAll(replayDirectory);
+            if (res.isErr()) {
                 return Popup::create(
                     i18n::get_("common.error"),
-                    ec.message()
+                    res.unwrapErr()
                 );
             }
         }
 
-        auto replayPath = config::get<std::filesystem::path>("bot.selectedreplay", "temp");
+        auto replayPath = config::get<asp::fs::Path>("bot.selectedreplay", "temp");
 
-        if (std::filesystem::exists(replayPath, ec)) {
+        if (replayPath.exists()) {
+            auto name = replayPath.stem().value_or({});
+
             return Popup::create(
                 i18n::get_("common.warning"),
-                i18n::format("bot.overwrite", string::pathToString(replayPath.filename().stem())),
+                i18n::format("bot.overwrite", name),
                 i18n::get_("common.yes"),
                 i18n::get_("common.no"),
                 [&](bool result) {
                     if (!result)
                         return;
 
-                    auto confirmReplayDirectory = config::get<std::filesystem::path>("bot.selectedreplay", "temp");
+                    auto confirmReplayDirectory = config::get<asp::fs::Path>("bot.selectedreplay", "temp");
 
                     auto res = s_bot.save(confirmReplayDirectory);
                     if(res.isErr()) {
@@ -121,7 +122,7 @@ namespace eclipse::hacks::Bot {
                     Popup::create(
                         i18n::get_("bot.saved"),
                         i18n::format(
-                            "bot.saved.msg", confirmReplayDirectory.filename().stem(), s_bot.getInputCount()
+                            "bot.saved.msg", confirmReplayDirectory.stem().value_or({}), s_bot.getInputCount()
                         )
                     );
 
@@ -137,12 +138,12 @@ namespace eclipse::hacks::Bot {
         }
         Popup::create(
             i18n::get_("bot.saved"),
-            i18n::format("bot.saved.msg", replayPath.filename().stem(), s_bot.getInputCount())
+            i18n::format("bot.saved.msg", replayPath.stem().value_or({}), s_bot.getInputCount())
         );
         config::set("bot.selectedreplay", replayPath);
     }
 
-    void confirmLoad(std::filesystem::path const& replayPath) {
+    void confirmLoad(asp::fs::PathView replayPath) {
         auto res = s_bot.load(replayPath);
         if (res.isErr()) {
             return Popup::create(
@@ -152,12 +153,12 @@ namespace eclipse::hacks::Bot {
         }
         Popup::create(
             i18n::get_("bot.loaded"),
-            i18n::format("bot.loaded.msg", replayPath.filename().stem(), s_bot.getInputCount())
+            i18n::format("bot.loaded.msg", replayPath.stem().value_or({}), s_bot.getInputCount())
         );
     }
 
     void loadReplay() {
-        std::filesystem::path replayPath = config::get<std::string>("bot.selectedreplay", "");
+        asp::fs::Path replayPath = config::get<asp::fs::Path>("bot.selectedreplay", "");
 
         if (s_bot.getInputCount() > 0) {
             return Popup::create(
@@ -169,7 +170,7 @@ namespace eclipse::hacks::Bot {
                     if (!result)
                         return;
 
-                    std::filesystem::path confirmReplayPath = config::get<std::string>("bot.selectedreplay", "");
+                    asp::fs::Path confirmReplayPath = config::get<asp::fs::Path>("bot.selectedreplay", "");
 
                     confirmLoad(confirmReplayPath);
                 }
@@ -180,33 +181,31 @@ namespace eclipse::hacks::Bot {
     }
 
     void deleteReplay() {
-        std::filesystem::path replayPath = config::get<std::string>("bot.selectedreplay", "");
-        std::error_code ec;
-        if (!std::filesystem::exists(replayPath, ec)) {
+        asp::fs::Path replayPath = config::get<asp::fs::Path>("bot.selectedreplay", "");
+        if (!replayPath.exists()) {
             return Popup::create(
                 i18n::get_("bot.delete-invalid"),
                 i18n::get_("bot.delete-invalid.msg")
             );
         }
-        auto replayName = string::pathToString(replayPath.filename().stem());
+        auto replayName = std::string(replayPath.filename().value_or({}).stem().value_or({}));
         Popup::create(
             i18n::get_("common.warning"),
             i18n::format("bot.confirm-delete", replayName),
             i18n::get_("common.yes"),
             i18n::get_("common.no"),
-            [replayPath, replayName](bool result) {
+            [replayPath, replayName = std::move(replayName)](bool result) {
                 if (!result) return;
-                std::error_code ec;
-                if (std::filesystem::exists(replayPath, ec)) {
+                if (replayPath.exists()) {
                     Popup::create(
                         i18n::get_("bot.deleted"),
                         i18n::format("bot.deleted.msg", replayName)
                     );
-                    std::filesystem::remove(replayPath, ec);
-                    if (ec) {
+                    auto res = asp::fs::remove(replayPath);
+                    if (res.isErr()) {
                         return Popup::create(
                             i18n::get_("common.error"),
-                            ec.message()
+                            res.unwrapErr()
                         );
                     }
                     // apparently i cannot put the Popup below here otherwise some memory corruption happens, WHY? its not even a pointer!!
@@ -219,21 +218,21 @@ namespace eclipse::hacks::Bot {
             }
         );
     }
+
     void openReplaysFolder() {
         auto replaysDir = Mod::get()->getSaveDir() / "replays";
-        std::error_code ec;
-        
+
         // create the folder if it doesn't exist
-        if (!std::filesystem::exists(replaysDir, ec)) {
-            std::filesystem::create_directory(replaysDir, ec);
-            if (ec) {
+        if (!replaysDir.exists()) {
+            auto res = asp::fs::createDirAll(replaysDir);
+            if (res.isErr()) {
                 return Popup::create(
                     i18n::get_("common.error"),
-                    ec.message()
+                    res.unwrapErr()
                 );
             }
         }
-        
+
         geode::utils::file::openFolder(replaysDir);
     }
 
@@ -327,19 +326,19 @@ namespace eclipse::hacks::Bot {
     REGISTER_HACK(Bot)
 
     class $modify(BotPLHook, PlayLayer) {
-        bool init(GJGameLevel* gj, bool p1, bool p2) {
-            bool result = PlayLayer::init(gj, p1, p2);
-            s_bot.setLevelInfo(gdr::Level(gj->m_levelName, gj->m_levelID.value()));
-            s_bot.setPlatformer(gj->isPlatformer());
+        bool init(GJGameLevel* level, bool dontCreateObjects) {
+            bool result = PlayLayer::init(level, dontCreateObjects);
+            s_bot.setLevelInfo(gdr::Level(level->m_levelName, level->m_levelID.value()));
+            s_bot.setPlatformer(level->isPlatformer());
             // s_respawning = false;
             return result;
         }
 
-        void resetLevel() {
+        void resetLevel() override {
             // s_respawning = true;
             PlayLayer::resetLevel();
             Bot::applySettings();
-            
+
             if (m_checkpointArray->count() == 0) {
                 if(s_bot.getState() != bot::State::PLAYBACK)
                     s_bot.clearInputs();

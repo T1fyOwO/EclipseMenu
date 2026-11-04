@@ -13,7 +13,7 @@ namespace eclipse::i18n {
         void keyDown(cocos2d::enumKeyCodes key, double) override {}
 
         void setProgress(float progress);
-        void startDownloadFile(std::filesystem::path path, std::string url);
+        void startDownloadFile(asp::fs::Path path, std::string url);
         void handleFileDownloaded();
         void handleError(int code);
 

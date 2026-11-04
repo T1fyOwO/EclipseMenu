@@ -54,7 +54,7 @@ namespace eclipse::gui::cocos {
                 return;
 
             int value = std::clamp(*valueOpt, m_component->getMin(), m_component->getMax());
-            
+
             m_component->setValue(value);
             m_component->triggerCallback(value);
         }

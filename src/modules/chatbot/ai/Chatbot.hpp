@@ -17,7 +17,7 @@ namespace eclipse::ai {
     public:
         Chatbot();
 
-        geode::Result<> loadConfig(std::filesystem::path const& path);
+        geode::Result<> loadConfig(asp::fs::PathView path);
         std::string process(std::string const& input);
 
         void setupActions();

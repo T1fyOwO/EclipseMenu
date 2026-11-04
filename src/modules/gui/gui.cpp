@@ -80,7 +80,7 @@ namespace eclipse::gui {
     }
 
     FilesystemComboComponent* MenuTab::addFilesystemCombo(
-        std::string title, std::string id, std::filesystem::path directory
+        std::string title, std::string id, asp::fs::Path directory
     ) {
         return static_cast<FilesystemComboComponent*>(this->addComponent(
             std::make_unique<FilesystemComboComponent>(std::move(id), std::move(title), std::move(directory))
@@ -88,7 +88,7 @@ namespace eclipse::gui {
     }
 
     FilesystemComboComponent* MenuTab::addFilesystemCombo(
-        std::string id, std::filesystem::path directory
+        std::string id, asp::fs::Path directory
     ) {
         std::string title = id;
         return this->addFilesystemCombo(std::move(title), std::move(id), std::move(directory));

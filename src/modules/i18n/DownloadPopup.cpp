@@ -49,7 +49,7 @@ namespace eclipse::i18n {
         });
     }
 
-    void DownloadPopup::startDownloadFile(std::filesystem::path path, std::string url) {
+    void DownloadPopup::startDownloadFile(asp::fs::Path path, std::string url) {
         using namespace geode::utils;
 
         m_listener.spawn(
@@ -87,12 +87,15 @@ namespace eclipse::i18n {
         this->setProgress(static_cast<float>(m_filesDownloaded) / m_totalFiles);
 
         auto ext = BitmapFontsExtensions[m_filesDownloaded];
-        auto path = geode::Mod::get()->getConfigDir() / "bmfonts" / GEODE_MOD_ID / fmt::format("font_{}{}", m_charset, ext);
+
+        auto filename = fmt::format("font_{}{}", m_charset, ext);
+        auto path = geode::Mod::get()->getConfigDir() / "bmfonts" / GEODE_MOD_ID / filename;
 
         auto url = fmt::format(
             "https://raw.githubusercontent.com/EclipseMenu/EclipseMenu/refs/heads/main/resources/BitmapFonts/{}",
-            path.filename()
+            filename
         );
+
         this->startDownloadFile(std::move(path), std::move(url));
     }
 

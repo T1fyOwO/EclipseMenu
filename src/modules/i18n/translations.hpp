@@ -7,7 +7,7 @@ namespace eclipse::i18n {
         std::string code;
         std::string fallback;
         std::string charset;
-        std::filesystem::path path;
+        asp::fs::Path path;
     };
 
     constexpr auto DEFAULT_LANGUAGE = "en_US";

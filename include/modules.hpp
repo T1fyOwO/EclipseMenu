@@ -24,7 +24,7 @@ namespace eclipse::modules {
 namespace eclipse {
     /// @brief Load a replay from a file path.
     /// @param path The path to the replay file.
-    inline geode::Result<> loadReplay(std::filesystem::path const& path) {
+    inline geode::Result<> loadReplay(asp::fs::PathView path) {
         auto& vtable = __internal__::getVTable();
         if (vtable.LoadReplay) {
             return vtable.LoadReplay(path);

@@ -64,10 +64,10 @@ namespace eclipse::gui {
         ComboComponent* addCombo(std::string id, std::vector<std::string> items, int value);
 
         /// @brief Add a filesystem combo button to the tab.
-        FilesystemComboComponent* addFilesystemCombo(std::string title, std::string id, std::filesystem::path directory);
+        FilesystemComboComponent* addFilesystemCombo(std::string title, std::string id, asp::fs::Path directory);
 
         /// @brief Add a filesystem combo button to the tab. (id is the same as title)
-        FilesystemComboComponent* addFilesystemCombo(std::string id, std::filesystem::path directory);
+        FilesystemComboComponent* addFilesystemCombo(std::string id, asp::fs::Path directory);
 
         /// @brief Add a slider to the tab.
         SliderComponent* addSlider(std::string title, std::string id, float min = FLT_MIN, float max = FLT_MAX, std::string format = "%.3f");
