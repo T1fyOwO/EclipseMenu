@@ -1,4 +1,6 @@
 #include "window.hpp"
+
+#include <imgui_internal.h>
 #include <modules/config/config.hpp>
 #include <modules/gui/imgui/imgui.hpp>
 #include <modules/gui/theming/manager.hpp>
@@ -35,7 +37,71 @@ namespace eclipse::gui::imgui {
 
 
         if (ImGuiRenderer::get()->beginWindow(m_title)) {
+            ImVec2 winPos = ImGui::GetWindowPos();
+            ImVec2 winSize = ImGui::GetWindowSize();
+            float titleBarHeight = ImGui::GetFrameHeight();
+
             m_drawCallback();
+
+            // add scroll fade overlays to indicate more content
+            float scrollMaxY = ImGui::GetScrollMaxY();
+            if (scrollMaxY > 0.5f) {
+                float scrollY = ImGui::GetScrollY();
+                auto* drawList = ImGui::GetWindowDrawList();
+
+                float innerTop = winPos.y + titleBarHeight;
+                float innerBottom = winPos.y + winSize.y;
+                float innerLeft = winPos.x;
+                float innerRight = winPos.x + winSize.x;
+
+                float innerHeight = innerBottom - innerTop;
+                float preferred = 40.0f * scale;
+                float gradientHeight = preferred < innerHeight * 0.5f ? preferred : innerHeight * 0.5f;
+
+                ImU32 transparent = IM_COL32(0, 0, 0, 0);
+                ImU32 shadow = IM_COL32(0, 0, 0, 150);
+
+                drawList->PushClipRect(
+                    ImVec2(innerLeft, innerTop),
+                    ImVec2(innerRight, innerBottom),
+                    false
+                );
+
+                // top fade
+                if (scrollY > 0.5f) drawList->AddRectFilledMultiColor(
+                    ImVec2(innerLeft, innerTop),
+                    ImVec2(innerRight, innerTop + gradientHeight),
+                    shadow, shadow, transparent, transparent
+                );
+
+                // bottom fade
+                if (scrollY < scrollMaxY - 0.5f) {
+                    float rounding = ImGui::GetStyle().WindowRounding;
+                    float gradientTop = innerBottom - gradientHeight;
+
+                    int vtxStart = drawList->VtxBuffer.Size;
+                    drawList->AddRectFilled(
+                        ImVec2(innerLeft, gradientTop),
+                        ImVec2(innerRight, innerBottom),
+                        shadow,
+                        rounding,
+                        ImDrawFlags_RoundCornersBottom
+                    );
+                    int vtxEnd = drawList->VtxBuffer.Size;
+
+                    ImDrawVert* verts = drawList->VtxBuffer.Data;
+                    ImU32 rgb  = shadow & ~IM_COL32_A_MASK;
+                    float maxA = static_cast<float>((shadow >> IM_COL32_A_SHIFT) & 0xFF);
+                    float invH = 1.0f / (innerBottom - gradientTop);
+                    for (int i = vtxStart; i < vtxEnd; ++i) {
+                        float t = ImClamp((verts[i].pos.y - gradientTop) * invH, 0.0f, 1.0f);
+                        ImU32 a = static_cast<ImU32>(maxA * t);
+                        verts[i].col = rgb | (a << IM_COL32_A_SHIFT);
+                    }
+                }
+
+                drawList->PopClipRect();
+            }
         }
 
         // Allow moving the window
