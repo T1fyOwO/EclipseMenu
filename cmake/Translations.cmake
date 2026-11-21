@@ -2,6 +2,7 @@ include(FetchContent)
 
 if (DEFINED ENV{ECLIPSE_TRANSLATIONS_REPO_PATH})
     set(TRANSLATIONS_PATH $ENV{ECLIPSE_TRANSLATIONS_REPO_PATH})
+    add_subdirectory(${TRANSLATIONS_PATH} ${CMAKE_BINARY_DIR}/eclipse_translations)
 else()
     FetchContent_Declare(
         eclipse_translations
