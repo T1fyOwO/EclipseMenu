@@ -271,18 +271,20 @@ namespace eclipse::hacks::Bot {
         }
 
         void init() override {
-            const auto updateBotState = [](int state) {
-                if (s_bot.getState() == bot::State::DISABLED) {
+            const auto updateBotState = [](int newState) {
+                auto oldState = s_bot.getState();
+                auto ns = static_cast<bot::State>(newState);
+
+                s_bot.setState(ns);
+
+                if (oldState == bot::State::DISABLED && ns != bot::State::DISABLED) {
                     savePreBotSettings();
-                }
-
-                s_bot.setState(static_cast<bot::State>(state));
-
-                if (state == 0) {
+                    Bot::applySettings();
+                } else if (oldState != bot::State::DISABLED && ns == bot::State::DISABLED) {
                     restorePreBotSettings();
-                    return;
+                } else if (ns != bot::State::DISABLED) {
+                    Bot::applySettings();
                 }
-                Bot::applySettings();
             };
 
 #ifdef GEODE_IS_WINDOWS
@@ -292,7 +294,6 @@ namespace eclipse::hacks::Bot {
 #endif
             config::set("bot.state", 0);
             restorePreBotSettings();
-            updateBotState(0);
 
             auto tab = gui::MenuTab::find("tab.bot");
 
