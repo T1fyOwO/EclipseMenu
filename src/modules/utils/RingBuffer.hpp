@@ -16,7 +16,7 @@ public:
     using allocator_traits = std::allocator_traits<Alloc>;
     using size_type = size_t;
 
-    explicit constexpr RingBuffer(size_type n, Alloc const& alloc = Alloc()) noexcept(std::is_nothrow_constructible_v<Alloc>)
+    explicit constexpr RingBuffer(size_type n, Alloc const& alloc = Alloc())
         : m_alloc(alloc),
           m_allocStart(allocator_traits::allocate(m_alloc, n)),
           m_allocEnd(m_allocStart + n),
@@ -54,7 +54,11 @@ public:
                 this->destroy_all();
                 allocator_traits::deallocate(m_alloc, m_allocStart, m_capacity);
             }
-            m_alloc = allocator_traits::select_on_container_copy_construction(other.m_alloc);
+
+            if constexpr (allocator_traits::propagate_on_container_copy_assignment::value) {
+                m_alloc = allocator_traits::select_on_container_copy_construction(other.m_alloc);
+            }
+
             m_allocStart = allocator_traits::allocate(m_alloc, other.m_capacity);
             m_allocEnd = m_allocStart + other.m_capacity;
             m_start = m_allocStart;
@@ -71,7 +75,7 @@ public:
         return *this;
     }
 
-    constexpr RingBuffer(RingBuffer&& other) noexcept
+    constexpr RingBuffer(RingBuffer&& other) noexcept(std::is_nothrow_move_constructible_v<Alloc>)
         : m_alloc(std::move(other.m_alloc)),
           m_allocStart(std::exchange(other.m_allocStart, nullptr)),
           m_allocEnd(std::exchange(other.m_allocEnd, nullptr)),
@@ -80,11 +84,14 @@ public:
           m_size(std::exchange(other.m_size, 0)),
           m_capacity(std::exchange(other.m_capacity, 0)) {}
 
-    RingBuffer& operator=(RingBuffer&& other) noexcept {
+    RingBuffer& operator=(RingBuffer&& other) noexcept(std::is_nothrow_move_assignable_v<Alloc> && std::is_nothrow_destructible_v<T>) {
+        if (this == &other) return *this;
+
         if (m_allocStart) {
             this->destroy_all();
             allocator_traits::deallocate(m_alloc, m_allocStart, m_capacity);
         }
+
         m_alloc = std::move(other.m_alloc);
         m_allocStart = std::exchange(other.m_allocStart, nullptr);
         m_allocEnd = std::exchange(other.m_allocEnd, nullptr);
@@ -92,6 +99,7 @@ public:
         m_end = std::exchange(other.m_end, nullptr);
         m_size = std::exchange(other.m_size, 0);
         m_capacity = std::exchange(other.m_capacity, 0);
+
         return *this;
     }
 
@@ -167,7 +175,7 @@ public:
         m_allocStart = new_alloc;
         m_allocEnd = new_alloc + new_capacity;
         m_start = new_alloc;
-        m_end = new_alloc + new_size;
+        m_end = new_size == new_capacity ? new_alloc : new_alloc + new_size;
         m_size = new_size;
         m_capacity = new_capacity;
     }
