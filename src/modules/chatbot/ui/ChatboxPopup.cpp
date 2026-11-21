@@ -40,7 +40,7 @@ namespace eclipse::ai {
 
         this->setID("chatbox-popup"_spr);
 
-        m_input = TextInput::create(150.f, "Type a message...", "chatFont.fnt");
+        m_input = TextInput::create({150.f, 30.f}, "Type a message...", "chatFont.fnt");
         if (!m_input) return false;
 
         m_chatHistory = ScrollLayer::create({170.f, 205.f});
@@ -59,17 +59,17 @@ namespace eclipse::ai {
         sendButtonBase->setScale(0.8f);
         sendButtonIcon->setScale(1.f);
 
+        m_chatHistory->setAnchorPoint({0.f, 0.f});
+
         m_sendButton = Button::createWithNode(sendButtonBase, [this](Button*) {
             this->submitMessage(m_input->getString());
         });
         if (!m_sendButton) return false;
 
         m_input->setCommonFilter(CommonFilter::Any);
-        this->addEventListener(KeyboardInputEvent(KEY_Enter), [this](KeyboardInputData& event) {
-            if (event.action == KeyboardInputData::Action::Release && m_input->getInputNode()->m_selected) {
-                this->submitMessage(m_input->getString());
-                m_input->defocus();
-            }
+        m_input->setEnterCallback([this](std::string const& value) {
+            this->submitMessage(value);
+            m_input->unfocus();
         });
 
         m_input->setAnchorPoint({0.f, 0.f});
