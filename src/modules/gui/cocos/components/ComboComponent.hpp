@@ -4,8 +4,6 @@
 #include <modules/gui/components/combo.hpp>
 #include <modules/gui/theming/manager.hpp>
 
-#include <modules/gui/cocos/popup/scroll-layer.hpp>
-
 namespace eclipse::gui::cocos {
     class ComboComponentNode : public BaseComponentNode<ComboComponentNode, cocos2d::CCMenu, ComboComponent, float> {
     protected:
@@ -14,7 +12,7 @@ namespace eclipse::gui::cocos {
         geode::NineSlice* m_background = nullptr;
         TranslatedLabel* m_valueLabel = nullptr;
         geode::Ref<CCMenuItemSpriteExtra> m_arrowButton = nullptr;
-        geode::Ref<ScrollLayer> m_scrollLayer;
+        geode::Ref<geode::ScrollLayer> m_scrollLayer;
 
         static inline ComboComponentNode* s_activeCombo = nullptr;
         std::vector<TranslatedLabel*> m_labels;
@@ -30,10 +28,10 @@ namespace eclipse::gui::cocos {
             auto const tm = ThemeManager::get();
 
             auto const scrollHeight = std::min<float>(m_component->getItems().size(), 3.5f) * 80.f;
-            m_scrollLayer = ScrollLayer::create({365.f * 0.3f, scrollHeight * 0.3f});
+            m_scrollLayer = geode::ScrollLayer::create({365.f * 0.3f, scrollHeight * 0.3f});
             m_scrollLayer->setID("scrollLayer");
             m_scrollLayer->setZOrder(2);
-            m_scrollLayer->ignoreAnchorPointForPosition(false);
+            m_scrollLayer->setStealingTouches(true);
             m_scrollLayer->m_contentLayer->setLayout(
                 geode::ColumnLayout::create()
                     ->setAutoScale(false)
@@ -43,25 +41,6 @@ namespace eclipse::gui::cocos {
                     ->setGap(0),
                 false
             );
-
-            auto scrollBlock = cocos2d::CCMenu::create();
-            scrollBlock->setScale(0.3f);
-            scrollBlock->setContentSize({365.f, scrollHeight});
-            scrollBlock->setZOrder(-100);
-            scrollBlock->registerWithTouchDispatcher();
-
-            auto scrollBlockButton = CCMenuItemSpriteExtra::create(
-                cocos2d::CCSprite::create("GJ_button_01.png"),
-                nullptr,
-                nullptr
-            );
-            scrollBlockButton->setContentSize({365.f, scrollHeight});
-            scrollBlockButton->setZOrder(1);
-            scrollBlockButton->setAnchorPoint({0.5f, 0.5f});
-            scrollBlockButton->setOpacity(0);
-            scrollBlockButton->m_scaleMultiplier = 1.f;
-            scrollBlock->addChildAtPosition(scrollBlockButton, geode::Anchor::Center);
-            m_scrollLayer->addChildAtPosition(scrollBlock, geode::Anchor::Center);
 
             auto scrollBackground = geode::NineSlice::create("square02b_001.png");
             scrollBackground->setID("scrollBackground");
@@ -73,6 +52,7 @@ namespace eclipse::gui::cocos {
 
             for (size_t i = 0; auto const& component : m_component->getItems()) {
                 auto menu = cocos2d::CCMenu::create();
+                menu->setID("menu");
                 // menu->registerWithTouchDispatcher();
                 menu->setContentSize({365.f * 0.3f, 80.f * 0.3f});
 
@@ -133,7 +113,7 @@ namespace eclipse::gui::cocos {
             if (globalBottom.y > m_scrollLayer->getContentHeight() + 20.f) {
                 m_scrollLayer->setAnchorPoint({0.5f, 1.f});
                 auto const targetPos = ccp(this->getContentWidth() - 70.f, this->getContentHeight() / 2.f - backgroundBox.getMidY());
-                if (auto parent = this->getParent(); parent) {
+                if (auto parent = this->getParent()) {
                     auto const parentPos = parent->convertToNodeSpace(this->convertToWorldSpace(targetPos));
                     parent->addChild(m_scrollLayer, 10);
                     m_scrollLayer->setPosition(parentPos);
@@ -141,7 +121,7 @@ namespace eclipse::gui::cocos {
             } else {
                 m_scrollLayer->setAnchorPoint({0.5f, 0.f});
                 auto const targetPos = ccp(this->getContentWidth() - 70.f, this->getContentHeight() / 2.f + backgroundBox.getMidY());
-                if (auto parent = this->getParent(); parent) {
+                if (auto parent = this->getParent()) {
                     auto const parentPos = parent->convertToNodeSpace(this->convertToWorldSpace(targetPos));
                     parent->addChild(m_scrollLayer, 10);
                     m_scrollLayer->setPosition(parentPos);
@@ -151,6 +131,7 @@ namespace eclipse::gui::cocos {
 
         void closeSelector(CCObject* sender) {
             if (m_scrollLayer) m_scrollLayer->removeFromParent();
+
             m_arrowButton->setRotation(90.f);
             m_arrowButton->setTarget(this, menu_selector(ComboComponentNode::openSelector));
             s_activeCombo = nullptr;

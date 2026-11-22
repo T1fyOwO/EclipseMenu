@@ -37,8 +37,9 @@ namespace eclipse::gui::cocos {
 
     bool ContentView::init(cocos2d::CCSize const& size, MenuTab const& tab) {
         if (!CCNode::init()) return false;
-        //m_contentLayer = geode::ScrollLayer::create(size);
         m_contentLayer = ScrollLayer::create(size);
+        m_contentLayer->setStealingTouches(true);
+        m_contentLayer->setAnchorPoint({0.f, 0.f});
 
         this->setContentSize(size);
         this->setID("content-menu"_spr);
