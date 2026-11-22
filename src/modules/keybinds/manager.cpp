@@ -270,8 +270,6 @@ namespace eclipse::keybinds {
                 #endif
             }
         }
-
-        geode::log::warn("Keybind with ID '{}' not found", id);
     }
 
     inline bool shouldIgnoreInputs() {
