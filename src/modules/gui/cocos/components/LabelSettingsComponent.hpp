@@ -43,7 +43,7 @@ namespace eclipse::gui::cocos {
             m_toggler->toggle(m_component->getSettings()->visible);
             this->addChildAtPosition(m_toggler, geode::Anchor::Left, { 20.f, 0.f });
 
-            auto nameTextBox = geode::TextInput::create(120.f, "Label Name", "font_default.fnt"_spr);
+            auto nameTextBox = geode::TextInput::create({120.f, 30.f}, "Label Name", "font_default.fnt"_spr);
             nameTextBox->setString(settings->name);
             nameTextBox->setID("name-textbox");
             nameTextBox->setAnchorPoint({0, 0.5f});

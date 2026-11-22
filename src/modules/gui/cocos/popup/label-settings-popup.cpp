@@ -440,7 +440,7 @@ namespace eclipse::gui::cocos {
         column1->addChild(createLabel("labels.font"));
         column1->addChild(createLabel("labels.absolute"));
 
-        auto absoluteX = geode::TextInput::create(120.f, "0", "font_default.fnt"_spr);
+        auto absoluteX = geode::TextInput::create({120.f, 30.f}, "0", "font_default.fnt"_spr);
         absoluteX->setCommonFilter(geode::CommonFilter::Float);
         absoluteX->setString(fmt::to_string(settings->offset.x));
         absoluteX->setCallback([this](std::string const& text) {
@@ -471,7 +471,7 @@ namespace eclipse::gui::cocos {
             m_component->triggerEditCallback();
         }));
 
-        auto opacityInput = geode::TextInput::create(120.f, "0.750000", "font_default.fnt"_spr);
+        auto opacityInput = geode::TextInput::create({120.f, 30.f}, "0.750000", "font_default.fnt"_spr);
         opacityInput->setCommonFilter(geode::CommonFilter::Float);
         opacityInput->setString(fmt::to_string(settings->color.a));
         opacityInput->setCallback([this](std::string const& text) {
@@ -482,7 +482,7 @@ namespace eclipse::gui::cocos {
         });
         column2->addChild(opacityInput);
 
-        auto scaleInput = geode::TextInput::create(120.f, "0.300000", "font_default.fnt"_spr);
+        auto scaleInput = geode::TextInput::create({120.f, 30.f}, "0.300000", "font_default.fnt"_spr);
         scaleInput->setCommonFilter(geode::CommonFilter::Float);
         scaleInput->setString(fmt::to_string(settings->scale));
         scaleInput->setCallback([this](std::string const& text) {
@@ -513,7 +513,7 @@ namespace eclipse::gui::cocos {
         absolutePosToggle->toggle(settings->absolutePosition);
         column2->addChild(absolutePosToggle);
 
-        auto absoluteY = geode::TextInput::create(120.f, "0", "font_default.fnt"_spr);
+        auto absoluteY = geode::TextInput::create({120.f, 30.f}, "0", "font_default.fnt"_spr);
         absoluteY->setCommonFilter(geode::CommonFilter::Float);
         absoluteY->setString(fmt::to_string(settings->offset.y));
         absoluteY->setCallback([this](std::string const& text) {
@@ -553,12 +553,10 @@ namespace eclipse::gui::cocos {
     cocos2d::CCLayer* LabelSettingsPopup::createTextTab() {
         auto layer = CCLayer::create();
 
-        auto input = geode::TextInput::create(250.f, "FPS: {fps}", "font_default.fnt"_spr);
-        input->setCommonFilter(geode::CommonFilter::Any);
+        auto input = geode::TextInput::createMultiline({375.f, 187.5f}, "FPS: {fps}", "font_default.fnt"_spr);
+        input->setCommonFilter(geode::CommonFilter::TextEmojis);
+        input->getContentLabel()->registerFont("font_cyrillic.fnt"_spr);
         input->setString(m_component->getSettings()->text);
-        input->setContentSize({ 375.f, 187.5f });
-        input->getBGSprite()->setContentSize({ 750.f, 375.f });
-        input->updateLayout();
         input->setCallback([this](std::string const& text) {
             m_component->getSettings()->text = text;
             m_component->triggerEditCallback();
@@ -659,7 +657,7 @@ namespace eclipse::gui::cocos {
         menu->addChildAtPosition(visibilityPicker, geode::Anchor::TopLeft, { 137.5f, -44.f });
 
         // Inputs
-        auto customConditionInput = geode::TextInput::create(165.f, "progress >= bestPercent", "font_default.fnt"_spr);
+        auto customConditionInput = geode::TextInput::create({165.f, 30.f}, "progress >= bestPercent", "font_default.fnt"_spr);
         customConditionInput->setCommonFilter(geode::CommonFilter::Any);
         customConditionInput->setString(event.condition);
         customConditionInput->setScale(0.9f);
@@ -670,7 +668,7 @@ namespace eclipse::gui::cocos {
         customConditionInput->setID("custom-condition-input"_spr);
         menu->addChildAtPosition(customConditionInput, geode::Anchor::TopLeft, { 260.f, -16.f });
 
-        auto durationInput = geode::TextInput::create(100.f, "1.0", "font_default.fnt"_spr);
+        auto durationInput = geode::TextInput::create({100.f, 30.f}, "1.0", "font_default.fnt"_spr);
         durationInput->setCommonFilter(geode::CommonFilter::Float);
         durationInput->setString(fmt::to_string(event.duration));
         durationInput->setScale(0.9f);
@@ -683,7 +681,7 @@ namespace eclipse::gui::cocos {
         durationInput->setID("duration-input"_spr);
         menu->addChildAtPosition(durationInput, geode::Anchor::TopLeft, { 137.5f, -132.f });
 
-        auto modifyScaleInput = geode::TextInput::create(100.f, "1.0", "font_default.fnt"_spr);
+        auto modifyScaleInput = geode::TextInput::create({100.f, 30.f}, "1.0", "font_default.fnt"_spr);
         modifyScaleInput->setCommonFilter(geode::CommonFilter::Float);
         modifyScaleInput->setString(fmt::to_string(event.scale.value_or(1.f)));
         modifyScaleInput->setScale(0.9f);
@@ -697,7 +695,7 @@ namespace eclipse::gui::cocos {
         modifyScaleInput->setVisible(event.scale.has_value());
         menu->addChildAtPosition(modifyScaleInput, geode::Anchor::TopLeft, { 322.5f, -44.f });
 
-        auto modifyOpacityInput = geode::TextInput::create(100.f, "1.0", "font_default.fnt"_spr);
+        auto modifyOpacityInput = geode::TextInput::create({100.f, 30.f}, "1.0", "font_default.fnt"_spr);
         modifyOpacityInput->setCommonFilter(geode::CommonFilter::Float);
         modifyOpacityInput->setString(fmt::to_string(event.opacity.value_or(1.f)));
         modifyOpacityInput->setScale(0.9f);
@@ -711,7 +709,7 @@ namespace eclipse::gui::cocos {
         modifyOpacityInput->setVisible(event.opacity.has_value());
         menu->addChildAtPosition(modifyOpacityInput, geode::Anchor::TopLeft, { 322.5f, -73.f });
 
-        auto delayInput = geode::TextInput::create(100.f, "0.0", "font_default.fnt"_spr);
+        auto delayInput = geode::TextInput::create({100.f, 30.f}, "0.0", "font_default.fnt"_spr);
         delayInput->setCommonFilter(geode::CommonFilter::Float);
         delayInput->setString(fmt::to_string(event.delay));
         delayInput->setScale(0.9f);
@@ -724,7 +722,7 @@ namespace eclipse::gui::cocos {
         delayInput->setID("delay-input"_spr);
         menu->addChildAtPosition(delayInput, geode::Anchor::TopLeft, { 322.5f, -102.f });
 
-        auto easingInput = geode::TextInput::create(100.f, "0.0", "font_default.fnt"_spr);
+        auto easingInput = geode::TextInput::create({100.f, 30.f}, "0.0", "font_default.fnt"_spr);
         easingInput->setCommonFilter(geode::CommonFilter::Float);
         easingInput->setString(fmt::to_string(event.easing));
         easingInput->setScale(0.9f);

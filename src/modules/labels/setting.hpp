@@ -38,7 +38,7 @@ namespace eclipse::labels {
     };
 
     constexpr std::array fontNames = {
-        "Pusab", "Aller", "Gold Pusab", "TRS Million",
+        "Pusab", "Helvetica", "Gold Pusab", "TRS Million",
         "SF Distant Galaxy", "Relish Gargler", "Early GameBoy", "Good Dog",
         "Dancing Script", "Stencilla", "Xirod", "Minercraftory",
         "Super Mario 256", "Ketchum", "Gargle", "Amatic",

@@ -19,7 +19,7 @@ namespace eclipse::gui::cocos {
         auto winSize = utils::get<cocos2d::CCDirector>()->getWinSize();
         this->setTitle("");
         m_buttonMenu->setContentSize(winSize);
-        m_closeBtn->setPosition(20.f, winSize.height - 20.f);
+        m_closeBtn->setPosition(0.f, 280.f);
         m_bgSprite->removeMeAndCleanup();
 
         // The behind background for the entire popup to get the outline

@@ -7,7 +7,7 @@
 #include <modules/gui/theming/manager.hpp>
 
 namespace eclipse::gui::cocos {
-    class IntToggleComponentNode : public BaseComponentNode<IntToggleComponentNode, cocos2d::CCMenu, IntToggleComponent, float>, public TextInputDelegate {
+    class IntToggleComponentNode : public BaseComponentNode<IntToggleComponentNode, cocos2d::CCMenu, IntToggleComponent, float> {
     protected:
         CCMenuItemToggler* m_toggler = nullptr;
         TranslatedLabel* m_label = nullptr;
@@ -55,30 +55,28 @@ namespace eclipse::gui::cocos {
             m_label->setColor(tm->getCheckboxForegroundColor().toCCColor3B());
             this->addChildAtPosition(m_label, geode::Anchor::Left, { 30.f, 0.f });
 
-            m_textInput = geode::TextInput::create(120, m_component->getTitle().c_str(), "font_default.fnt"_spr);
+            m_textInput = geode::TextInput::create({120.f, 30.f}, m_component->getTitle().c_str(), "font_default.fnt"_spr);
             m_textInput->setAnchorPoint({ 0.5f, 0.5f });
-            m_textInput->getInputNode()->setAllowedChars(".0123456789");
-            m_textInput->setDelegate(this);
+            m_textInput->setNumericMode(true);
+            m_textInput->setCommonFilter(geode::CommonFilter::Int);
+            m_textInput->setCallback([this](std::string const& val) {
+                auto valueOpt = geode::utils::numFromString<int>(val);
+                if (!valueOpt) return;
+
+                int value = std::clamp(*valueOpt, m_component->getMin(), m_component->getMax());
+
+                m_component->setValue(value);
+                m_component->triggerCallback(value);
+            });
+            m_textInput->setFocusCallback([this](geode::TextInput::FocusState state) {
+                if (state == geode::TextInput::FocusState::Unfocused)
+                    m_textInput->setString(fmt::to_string(m_component->getValue()));
+            });
             m_textInput->setString(fmt::to_string(m_component->getValue()));
             m_textInput->setScale(0.85f);
             this->addChildAtPosition(m_textInput, geode::Anchor::Right, { -70.f, 0.f });
 
             return true;
-        }
-
-        virtual void textChanged(CCTextInputNode* input) override {
-            geode::Result<int> valueOpt = geode::utils::numFromString<int>(input->getString());
-            if(!valueOpt)
-                return;
-
-            int value = std::clamp(*valueOpt, m_component->getMin(), m_component->getMax());
-
-            m_component->setValue(value);
-            m_component->triggerCallback(value);
-        }
-
-        void textInputClosed(CCTextInputNode* input) override {
-            m_textInput->setString(fmt::to_string(m_component->getValue()));
         }
     };
 }

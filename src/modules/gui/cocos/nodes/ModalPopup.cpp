@@ -41,7 +41,7 @@ namespace eclipse::gui::cocos {
         m_mainLayer->updateLayout();
 
         if (m_settings.isPrompt()) {
-            auto textBox = geode::TextInput::create(m_size.width - 30.f, m_settings.getPromptValue(), "font_default.fnt"_spr);
+            auto textBox = geode::TextInput::create({m_size.width - 30.f, 30.f}, m_settings.getPromptValue(), "font_default.fnt"_spr);
             textBox->setID("textbox"_spr);
             textBox->setAnchorPoint({ 0.5f, 0.5f });
             textBox->setString(m_settings.getPromptValue());
