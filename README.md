@@ -1,5 +1,5 @@
 <div align="center">
-   <a href="https://github.com/EclipseMenu/EclipseMenu">
+   <a href="https://git.eclipse.menu/EclipseMenu/EclipseMenu">
       <img src="logo.png" alt="Logo" width="120" height="120">
    </a>
    <h1 align="center">Eclipse</h1>
@@ -8,17 +8,6 @@
    </p>
 </div>
 <div align="center">
-    <a href="https://github.com/EclipseMenu/EclipseMenu/latest">
-          <img src="https://img.shields.io/github/v/release/EclipseMenu/EclipseMenu" alt="Release version">
-    </a>
-    <img src="https://img.shields.io/github/downloads/EclipseMenu/EclipseMenu/total" alt="Total downloads">
-    <img src="https://img.shields.io/github/downloads/EclipseMenu/EclipseMenu/latest/total" alt="Latest release downloads">
-    <a href="LICENSE.md">
-      <img src="https://img.shields.io/github/license/EclipseMenu/EclipseMenu" alt="License">
-    </a>
-    <a href="https://github.com/EclipseMenu/EclipseMenu/issues">
-      <img src="https://img.shields.io/github/issues/EclipseMenu/EclipseMenu" alt="Issues">
-    </a>
     <a href="https://discord.gg/NnpwFRDMND">
       <img src="https://img.shields.io/discord/1256092297829945414?label=discord&logo=discord" alt="Discord">
     </a>
@@ -77,10 +66,9 @@
 1. You must have the following: `CMake`, `MSVC / Clang`, `Git`, `Geode CLI`, `Geode SDK`
 
 ```bash
-git clone https://github.com/EclipseMenu/EclipseMenu
+git clone https://git.eclipse.menu/EclipseMenu/EclipseMenu
 cd EclipseMenu
-cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
-cmake --build build --config RelWithDebInfo
+geode build -- -G Ninja
 ```
 
 ## Credits

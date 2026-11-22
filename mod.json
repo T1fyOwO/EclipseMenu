@@ -1,5 +1,5 @@
 {
-	"geode": "6.0.0-alpha.1",
+	"geode": "6.0.0-beta.1",
 	"gd": {
 		"win": "2.2091",
 		"mac": "2.2091",
@@ -11,7 +11,7 @@
 	"name": "Eclipse",
 	"links": {
 		"homepage": "https://eclipse.menu",
-		"source": "https://github.com/EclipseMenu/EclipseMenu",
+		"source": "https://git.eclipse.menu/EclipseMenu/EclipseMenu",
 		"community": "https://discord.gg/NnpwFRDMND"
 	},
 	"api": { "include": [ "include/*.hpp" ] },
