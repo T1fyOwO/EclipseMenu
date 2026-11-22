@@ -98,7 +98,9 @@ namespace eclipse::gui::cocos {
             }
 
             auto value = m_component->getValue();
-            m_index = std::ranges::find(items, value) - items.begin();
+            m_index = std::ranges::find(
+                items, value, [](asp::fs::Path const& p){ return p.view(); }
+            ) - items.begin();
 
             updateLabel();
 
