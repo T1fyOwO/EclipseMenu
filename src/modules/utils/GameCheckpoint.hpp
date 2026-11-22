@@ -21,13 +21,55 @@ namespace eclipse::utils {
             m_unk3380 = playLayer->m_unk3380;
 
             #ifndef GEODE_IS_ANDROID
-            m_gameObjectPhysics = playLayer->m_gameState.m_gameObjectPhysics;
+            cloneGameObjectPhysics(
+                playLayer->m_gameState.m_gameObjectPhysics,
+                m_gameObjectPhysics
+            );
             #endif
+        }
+
+        // ok so. don't kill me for this, but at the time of writing GameObjectPhysics had broken
+        // copy ctor due to it having renamed_from members and unions not supporting copying by default...
+        static void cloneGameObjectPhysics(
+            std::unordered_map<int, GameObjectPhysics> const& from,
+            std::unordered_map<int, GameObjectPhysics>& to
+        ) {
+            struct FixedGameObjectPhysics : GameObjectPhysics {
+                FixedGameObjectPhysics() = default;
+
+                FixedGameObjectPhysics(FixedGameObjectPhysics const& other) {
+                    m_gameObject = other.m_gameObject;
+                    m_velocity = other.m_velocity;
+                    m_direction = other.m_direction;
+                    m_targetAngle = other.m_targetAngle;
+                    m_turnSpeed = other.m_turnSpeed;
+                    m_unkInt1 = other.m_unkInt1;
+                    m_lastUpdateStep = other.m_lastUpdateStep;
+                    m_exclusiveStep = other.m_exclusiveStep;
+                }
+
+                FixedGameObjectPhysics& operator=(FixedGameObjectPhysics const& other) {
+                    m_gameObject = other.m_gameObject;
+                    m_velocity = other.m_velocity;
+                    m_direction = other.m_direction;
+                    m_targetAngle = other.m_targetAngle;
+                    m_turnSpeed = other.m_turnSpeed;
+                    m_unkInt1 = other.m_unkInt1;
+                    m_lastUpdateStep = other.m_lastUpdateStep;
+                    m_exclusiveStep = other.m_exclusiveStep;
+                    return *this;
+                }
+            };
+
+            auto& toFix = *reinterpret_cast<std::unordered_map<int, FixedGameObjectPhysics>*>(&to);
+            auto& fromFix = *reinterpret_cast<std::unordered_map<int, FixedGameObjectPhysics> const*>(&from);
+
+            toFix = fromFix;
         }
 
         void apply(PlayLayer* playLayer) {
             //GJBaseGameLayer
-         
+
             playLayer->m_player1CollisionBlock = m_player1CollisionBlock;
             playLayer->m_player2CollisionBlock = m_player2CollisionBlock;
             playLayer->m_extraDelta = m_extraDelta;
@@ -38,7 +80,10 @@ namespace eclipse::utils {
             playLayer->m_unk3380 = m_unk3380;
 
             #ifndef GEODE_IS_ANDROID
-            playLayer->m_gameState.m_gameObjectPhysics = m_gameObjectPhysics;
+            cloneGameObjectPhysics(
+                m_gameObjectPhysics,
+                playLayer->m_gameState.m_gameObjectPhysics
+            );
             #endif
         }
 
@@ -319,10 +364,10 @@ namespace eclipse::utils {
 
             m_rotateObjectsRelated = player->m_rotateObjectsRelated; // unordered_map<int, GJPointDouble>
             m_potentialSlopeMap = player->m_potentialSlopeMap;       // unordered_map<int, GameObject*>
-            m_ringRelatedSet = player->m_ringRelatedSet;             // unordered_set<int>
+            m_usedRings = player->m_usedRings;                       // unordered_set<int>
             m_touchedRings = player->m_touchedRings;                 // unordered_set<int>
 
-            m_jumpPadRelated = player->m_jumpPadRelated;             // map<int, bool>
+            m_touchedForceIds = player->m_touchedForceIds;           // map<int, bool>
             m_playerFollowFloats = player->m_playerFollowFloats;     // vector<float>
 
             m_currentRobotAnimation = player->m_currentRobotAnimation;
@@ -590,10 +635,10 @@ namespace eclipse::utils {
 
             player->m_rotateObjectsRelated = m_rotateObjectsRelated;
             player->m_potentialSlopeMap = m_potentialSlopeMap;
-            player->m_ringRelatedSet = m_ringRelatedSet;
+            player->m_usedRings = m_usedRings;
             player->m_touchedRings = m_touchedRings;
 
-            player->m_jumpPadRelated = m_jumpPadRelated;
+            player->m_touchedForceIds = m_touchedForceIds;
             player->m_playerFollowFloats = m_playerFollowFloats;
 
             player->m_currentRobotAnimation = m_currentRobotAnimation;
@@ -619,22 +664,22 @@ namespace eclipse::utils {
         double m_dashStartTime;
         double m_slopeStartTime;
         bool m_justPlacedStreak;
-        cocos2d::CCNode* m_maybeLastGroundObject;
+        Ref<CCNode> m_maybeLastGroundObject;
         int m_lastCollisionBottom;
         int m_lastCollisionTop;
         int m_lastCollisionLeft;
         int m_lastCollisionRight;
         int m_unk50C;
         int m_unk510;
-        GameObject* m_currentSlope2;
-        GameObject* m_preLastGroundObject;
+        Ref<GameObject> m_currentSlope2;
+        Ref<GameObject> m_preLastGroundObject;
         float m_slopeAngle;
         bool m_slopeSlidingMaybeRotated;
         bool m_quickCheckpointMode;
-        GameObject* m_collidedObject;
-        GameObject* m_lastGroundObject;
-        GameObject* m_collidingWithLeft;
-        GameObject* m_collidingWithRight;
+        Ref<GameObject> m_collidedObject;
+        Ref<GameObject> m_lastGroundObject;
+        Ref<GameObject> m_collidingWithLeft;
+        Ref<GameObject> m_collidingWithRight;
         int m_maybeSavedPlayerFrame;
         double m_scaleXRelated2;
         double m_groundYVelocity;
@@ -645,8 +690,8 @@ namespace eclipse::utils {
         bool m_isCollidingWithSlope;
         bool m_isBallRotating;
         bool m_unk669;
-        GameObject* m_currentPotentialSlope;
-        GameObject* m_currentSlope;
+        Ref<GameObject> m_currentPotentialSlope;
+        Ref<GameObject> m_currentSlope;
         double unk_584;
         int m_collidingWithSlopeId;
         bool m_slopeFlipGravityRelated;
@@ -690,8 +735,8 @@ namespace eclipse::utils {
         double m_accelerationOrSpeed;
         double m_snapDistance;
         bool m_ringJumpRelated;
-        GameObject* m_objectSnappedTo;
-        CheckpointObject* m_pendingCheckpoint;
+        Ref<GameObject> m_objectSnappedTo;
+        Ref<CheckpointObject> m_pendingCheckpoint;
         int m_onFlyCheckpointTries;
         bool m_maybeSpriteRelated;
         bool m_useLandParticles0;
@@ -861,11 +906,11 @@ namespace eclipse::utils {
         #ifndef GEODE_IS_ANDROID
         std::unordered_map<int, GJPointDouble> m_rotateObjectsRelated;
         std::unordered_map<int, GameObject*> m_potentialSlopeMap;
-        std::unordered_set<int> m_ringRelatedSet;
+        std::unordered_set<int> m_usedRings;
         std::unordered_set<int> m_touchedRings;
-        std::map<int, bool> m_jumpPadRelated;
+        std::map<int, bool> m_touchedForceIds;
         std::vector<float> m_playerFollowFloats;
-        std::vector<CCObject*> m_touchingRings;
+        std::vector<Ref<CCObject>> m_touchingRings;
         std::string m_currentRobotAnimation;
         #endif
     };
