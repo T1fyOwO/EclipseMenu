@@ -50,7 +50,6 @@ namespace eclipse::hacks::Bypass {
         }
 
         void handleButton(bool down, int button, bool isPlayer1) {
-            m_allowedButtons.clear();
             GJBaseGameLayer::handleButton(down, button, isPlayer1);
         }
     };
