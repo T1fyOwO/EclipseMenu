@@ -75,7 +75,7 @@ namespace eclipse::i18n {
     void loadFallback(std::string_view code) {
         auto langs = fetchAvailableLanguages();
         auto it = std::ranges::find_if(langs, [&](auto const& lang) {
-            return lang.code == code;
+            return std::string_view(lang.code) == code;
         });
 
         if (it == langs.end()) return;
@@ -86,13 +86,13 @@ namespace eclipse::i18n {
         auto res2 = res.unwrap().as<Map>();
         if (res2.isErr()) return;
         g_fallback = std::move(res2.unwrap());
-        updateLanguageCode(g_fallback, it->path.filename().value_or({}));
+        updateLanguageCode(g_fallback, it->path.filename().value_or(asp::fs::PathView{}));
     }
 
     bool setLanguage(std::string_view code) {
         auto langs = fetchAvailableLanguages();
         auto it = std::ranges::find_if(langs, [&](auto const& lang) {
-            return lang.code == code;
+            return std::string_view(lang.code) == code;
         });
 
         if (it == langs.end()) return false;
@@ -103,7 +103,7 @@ namespace eclipse::i18n {
         if (map.isErr()) return false;
 
         g_translations = std::move(map.unwrap());
-        updateLanguageCode(g_translations, it->path.filename().value_or({}));
+        updateLanguageCode(g_translations, it->path.filename().value_or(asp::fs::PathView{}));
         config::setTemp<uint64_t>("language.index", std::distance(langs.begin(), it));
 
         // check if current fallback is the same as the new language
@@ -151,7 +151,7 @@ namespace eclipse::i18n {
 
         return LanguageMetadata{
             json["language-name"].asString().unwrapOrDefault(),
-            stringExtension(path.filename().value_or({})),
+            stringExtension(path.filename().value_or(asp::fs::PathView{})),
             std::move(fallback),
             std::move(charset),
             path
@@ -181,7 +181,7 @@ namespace eclipse::i18n {
                 if (!item) continue;
                 auto& entry = item.unwrap();
 
-                auto filename = entry.path.filename().value_or({});
+                auto filename = entry.path.filename().value_or(asp::fs::PathView{});
                 if (filename.size() < 10 || filename.view().substr(filename.size() - 10) != ".lang.json") continue;
 
                 auto code = filename.view().substr(0, filename.size() - 10);
@@ -190,7 +190,7 @@ namespace eclipse::i18n {
 
                 // filter out duplicates
                 if (std::ranges::find_if(result, [&](auto const& lang) {
-                    return lang.code == code;
+                    return std::string_view(lang.code) == code;
                 }) != result.end()) continue;
 
                 result.push_back(std::move(*name));
@@ -310,7 +310,7 @@ namespace eclipse::i18n {
     size_t getLanguageIndex() {
         auto langs = fetchAvailableLanguages();
         auto it = std::ranges::find_if(langs, [&](auto const& lang) {
-            return lang.code == config::get<std::string>("language", DEFAULT_LANGUAGE);
+            return std::string_view(lang.code) == config::get<std::string>("language", DEFAULT_LANGUAGE);
         });
 
         if (it == langs.end()) return 0;

@@ -309,11 +309,11 @@ namespace eclipse::gui::imgui {
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * (title.empty() ? .9f : .5f));
         if (ImGui::BeginCombo(
             fmt::format("##{}", title).c_str(),
-            value.empty() ? "None" : value.stem().value_or({}).data()
+            value.empty() ? "None" : value.stem().value_or(asp::fs::PathView{}).data()
         )) {
             ImGui::InputText("##search", combo->getSearchBuffer());
             for (int n = 0; n < items.size(); n++) {
-                auto option = std::string(items[n].stem().value_or({}));
+                auto option = std::string(items[n].stem().value_or(asp::fs::PathView{}));
                 if(geode::utils::string::toLower(option).find(geode::utils::string::toLower(*combo->getSearchBuffer())) != std::string::npos) {
                     bool const is_selected = (value == items[n]);
                     if (ImGui::Selectable(option.c_str(), is_selected)) {

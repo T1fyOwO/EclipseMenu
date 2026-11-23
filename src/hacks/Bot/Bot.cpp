@@ -100,7 +100,7 @@ namespace eclipse::hacks::Bot {
         auto replayPath = config::get<asp::fs::Path>("bot.selectedreplay", "temp");
 
         if (replayPath.exists()) {
-            auto name = replayPath.stem().value_or({});
+            auto name = replayPath.stem().value_or(asp::fs::PathView{});
 
             return Popup::create(
                 i18n::get_("common.warning"),
@@ -122,7 +122,7 @@ namespace eclipse::hacks::Bot {
                     Popup::create(
                         i18n::get_("bot.saved"),
                         i18n::format(
-                            "bot.saved.msg", confirmReplayDirectory.stem().value_or({}), s_bot.getInputCount()
+                            "bot.saved.msg", confirmReplayDirectory.stem().value_or(asp::fs::PathView{}), s_bot.getInputCount()
                         )
                     );
 
@@ -138,7 +138,7 @@ namespace eclipse::hacks::Bot {
         }
         Popup::create(
             i18n::get_("bot.saved"),
-            i18n::format("bot.saved.msg", replayPath.stem().value_or({}), s_bot.getInputCount())
+            i18n::format("bot.saved.msg", replayPath.stem().value_or(asp::fs::PathView{}), s_bot.getInputCount())
         );
         config::set("bot.selectedreplay", replayPath);
     }
@@ -153,7 +153,7 @@ namespace eclipse::hacks::Bot {
         }
         Popup::create(
             i18n::get_("bot.loaded"),
-            i18n::format("bot.loaded.msg", replayPath.stem().value_or({}), s_bot.getInputCount())
+            i18n::format("bot.loaded.msg", replayPath.stem().value_or(asp::fs::PathView{}), s_bot.getInputCount())
         );
     }
 
@@ -188,7 +188,7 @@ namespace eclipse::hacks::Bot {
                 i18n::get_("bot.delete-invalid.msg")
             );
         }
-        auto replayName = std::string(replayPath.filename().value_or({}).stem().value_or({}));
+        auto replayName = std::string(replayPath.filename().value_or(asp::fs::PathView{}).stem().value_or(asp::fs::PathView{}));
         Popup::create(
             i18n::get_("common.warning"),
             i18n::format("bot.confirm-delete", replayName),
